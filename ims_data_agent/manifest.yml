@@ -1,0 +1,22 @@
+manifest_version: 1
+artifacts:
+  setup_script: scripts/setup.sql
+  readme: readme.md
+  extension_code: true
+  default_streamlit: CORE.HOME
+references:
+  - consumer_table:
+      label: "Consumer table"
+      description: "A table in the consumer account that has the list of portfolios"
+      privileges:
+        - SELECT
+      object_type: TABLE
+      multi_valued: false
+      register_callback: config.register_single_reference
+
+configuration:
+  trace_level: OFF
+  log_level: INFO
+privileges:
+  - IMPORTED PRIVILEGES ON SNOWFLAKE DB:
+        description: "To access account_usage views and SNOWFLAKE TABLE with cortex functions"

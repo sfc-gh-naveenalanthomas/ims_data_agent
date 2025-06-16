@@ -1,0 +1,17 @@
+snowflake-snowpark-python
+pandas
+numpy
+streamlit
+matplotlib
+altair
+prophet
+statsmodels
+holidays
+numpy
+pandas-datareader
+cython
+future
+decorator
+scikit-learn
+tabulate
+pillow
