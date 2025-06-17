@@ -1,4 +1,4 @@
-# Portfolio Construction S&P500
+
 import streamlit as st
 import pandas as pd
 from snowflake.snowpark.context import get_active_session
@@ -56,7 +56,7 @@ with st.container():
             st.session_state.table_ref = ref_associations[0]
          else:
             permissions.request_reference("consumer_table")
-            st.warning("Please bind your portfolio table to continue.")
+            st.warning("Please bind your table to continue.")
 
          if st.session_state.table_ref:
             st.success("Your table is linked to the app successfully!")

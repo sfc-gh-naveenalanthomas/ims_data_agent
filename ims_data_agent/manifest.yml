@@ -7,7 +7,7 @@ artifacts:
 references:
   - consumer_table:
       label: "Consumer table"
-      description: "A table in the consumer account that has the list of portfolios"
+      description: "A table in the consumer account that has their data to connect with"
       privileges:
         - SELECT
       object_type: TABLE
