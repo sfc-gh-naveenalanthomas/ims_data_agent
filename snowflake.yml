@@ -1,14 +1,14 @@
 definition_version: 1
 native_app:
-  name: data_agent
+  name: ims_data_agent
   application:
-    name: data_agent
+    name: ims_data_agent
   source_stage: app_src.stage
   artifacts:
     - src: ims_data_agent/*
       dest: ./
   package:
-    name: data_agent_PKG
+    name: ims_data_agent_PKG
     scripts:
       - sql_scripts/setup.sql
       - sql_scripts/build_views.sql

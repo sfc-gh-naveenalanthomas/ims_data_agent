@@ -5,7 +5,6 @@ from typing import Dict, List, Optional
 import _snowflake
 import json
 import streamlit as st
-import time
 from snowflake.snowpark.context import get_active_session
 import snowflake.permissions as permissions
 
@@ -14,7 +13,7 @@ sp_session = get_active_session()
 DATABASE = sp_session.sql("SELECT CURRENT_DATABASE()").collect()[0][0]
 SCHEMA = "CORE"
 STAGE = "LIB_STG"
-FILE = "fsi_stock_ticker_agent.yaml"
+FILE = "ims_data_agent.yaml"
 
 
 st.session_state.setdefault("imported_privilege_granted", False)
@@ -140,69 +139,70 @@ def reset() -> None:
 
 app_db = sp_session.sql("SELECT CURRENT_DATABASE()").collect()[0][0]
 app_sch = 'CRM'
-st.title("QuantPulse Agent")
+st.title("Ericsson Data Agent")
 st.markdown(f"Semantic Model: `{FILE}`")
 with st.expander("💡 Sample Questions you can ask:", expanded=True):
     st.markdown("""
-    - Which portfolio has the highest compound annual growth rate (CAGR)?  
-    - What’s the return difference between equal-weight and Monte Carlo-weighted strategies for each portfolio?  
-    - Which portfolios performed better than the SPY benchmark?  
-    - Which companies in the Business Services sector have the highest earnings yield, ordered by earnings yield in descending order?  
-    - Which portfolio has outperformed its 200-day moving average the most in Dec 2019?
-    """)
+        - What is the average call duration for all successful calls?  
+        - How many calls did user `+36123456789` make in the last 7 days?  
+        - Show all failed calls that lasted more than 30 seconds.  
+        - Which node handled the most calls this week?  
+        - At what time of day do most call failures occur?  
+        """)
 
 with st.expander("💬 More questions that the Agent can answer", expanded=False):
-    st.markdown("### 📊 Performance & Strategy Comparison")
+
+    st.markdown("### 📞 Call & Performance Exploration")
     st.markdown("""
-- Which portfolio has the highest compound annual growth rate (CAGR)?  
-- Compare the Monte Carlo and Equal Weight strategy values for the Retail portfolio.  
-- What’s the return difference between equal-weight and Monte Carlo-weighted strategies for each portfolio?  
-- Compare EqualWeight and Monte Carlo strategy returns for all portfolios.  
-- Which portfolios performed better than the SPY benchmark?  
-- What’s the max drawdown of the CONSUMERCYCLICALS_PORTFOLIO under the inverse volatility strategy?  
-- Show me portfolios where the Monte Carlo strategy value is greater than 1.2 compared to the SPY benchmark value.  
-- Get unique list of portfolios with Calmar ratio above 0.5.
+    - What was the duration of the call with ID `TTCN3_985217_2121_1121@...`?  
+    - Show all calls longer than 60 seconds that failed.  
+    - What is the average call duration for successful calls?  
+    - Which call had the longest setup time this week?  
+    - What’s the success rate of calls made today?  
+    - Show all calls that occurred between 8AM and 10AM.  
     """)
 
-    st.markdown("### 📈 Trend & Moving Average Analysis")
+    st.markdown("### 👤 User-Level Analysis")
     st.markdown("""
-- Which portfolio has outperformed its 200-day moving average the most in the last month?  
-- How does the 50-day SMA compare to the 200-day SMA for the HEALTHCARE portfolio?  
-- Is the ENERGY portfolio trading above or below its 200-day SMA?  
-- Show the daily Equal Weight prices for INDUSTRIALS portfolio over time.
+    - How many calls did user `+36123456789` make last week?  
+    - Which users had the highest average call duration?  
+    - Who are the top 5 users by call volume?  
+    - What is the call failure rate for each user?  
+    - List users who made calls from more than one node.  
     """)
 
-    st.markdown("### 🧠 Fundamentals-Driven Company Questions (Stock Profile)")
+    st.markdown("### 🕒 Time-of-Day & Hourly Behavior")
     st.markdown("""
-- Which companies in the Business Services sector have the highest earnings yield, ordered by earnings yield in descending order?  
-- Which companies in the Business Services sector have the highest earnings yield?  
-- What are the top 10 companies in the Business Services sector based on Return on Equity (ROE)?  
-- List the top 10 companies by return on equity.  
-- Show me the earnings yield and EPS growth rate for companies in the Technology sector based on the available stock profile data.  
-- Which stocks in the INDUSTRIALS sector have the highest EPS growth rate?  
-- What is the one-day price change for Consumer Non-Cyclicals sector stocks?  
-- Get the top 5 companies in the Technology sector based on their Return on Invested Capital (ROIC), sorted from highest to lowest ROIC.  
-- Which stocks had the highest 1-day percentage gain?
+    - What time of day has the most call traffic?  
+    - Compare call volume between morning and evening.  
+    - Show call failures by hour of day.  
+    - How many calls were made at night in the last 7 days?  
     """)
 
-    st.markdown("### 🧬 Portfolio Attribution & Contextual Understanding")
+    st.markdown("### 🌐 Node & Network Diagnostics")
     st.markdown("""
-- What does the CONSUMERSERVICES_PORTFOLIO consist of?  
-- Which portfolio descriptions include energy or renewables?
+    - Which node handled the most calls?  
+    - How many unique users were served by each node?  
+    - List failed calls grouped by `NODE_ID`.  
+    - Which node has the highest call setup time average?  
     """)
 
-    st.markdown("### 📅 Time Series & Period-Based Analysis")
+    st.markdown("### 📊 Call Result Insights")
     st.markdown("""
-- What is the 3-month return for each portfolio under the equal weight strategy from January 1, 2018 to March 31, 2018?  
-- How does the CALMAR ratio trend across portfolios over the last 5 years?  
-- Show me the best and worst performing portfolios based on 1-year returns.
+    - How many calls were successful vs failed today?  
+    - What percentage of calls failed last week?  
+    - Show all calls where the `RESULT` is not `_0`.  
+    - Which event IDs are associated with failed calls?  
     """)
 
-    st.markdown("### 🚀 Multi-Domain Insightful Portfolio Analysis")
+    st.markdown("### 🔍 Call Search & Debugging")
     st.markdown("""
-- For the UTILITIES_PORTFOLIO, compare the Monte Carlo strategy value to the SPY benchmark value over the entire available time period.  
-- Compare the Monte Carlo strategy value to the SPY benchmark value over the entire available time period for all my portfolio and get me the top 3.
+    - Find the call with ID `TTCN3_985288_2015_1005@...` and show all its details.  
+    - Show all calls made by `+36123000121` today.  
+    - Which calls had duration above 2 minutes and failed?  
+    - Show the top 10 longest calls made in the last 24 hours.  
     """)
+
 
 
 sp_session.sql("call {0}.PYTHON_FUNCTIONS.sp_init('{0}');".format(app_db)).collect()

@@ -42,12 +42,12 @@ def main(session: snowflake.snowpark.Session, app_database: str):
         output_list.append('Begin')
         
         output_list.append('file read attempt')
-        input_file = session.file.get_stream('/fsi_stock_ticker_agent.yaml')
+        input_file = session.file.get_stream('/ims_data_agent.yaml')
         output_list.append('file read complete')
         output_list.append('yml file creation attempt')
         session.file.put_stream(
             input_stream=input_file,
-            stage_location='@CORE.LIB_STG/fsi_stock_ticker_agent.yaml',
+            stage_location='@CORE.LIB_STG/ims_data_agent.yaml',
             auto_compress = False,
             source_compression = 'NONE',
             parallel = 1, 
@@ -109,6 +109,79 @@ GRANT USAGE ON PROCEDURE PYTHON_FUNCTIONS.prophet_forecast_factset(varchar, varc
 
 CREATE OR REPLACE SECURE VIEW CRM.SAMPLE_DATA_VW AS SELECT * FROM SHARED_CONTENT.SAMPLE_DATA_VW;
 GRANT SELECT ON VIEW CRM.SAMPLE_DATA_VW TO APPLICATION ROLE APP_PUBLIC;
+
+
+CREATE OR REPLACE SECURE VIEW CRM.IMS_ENHANCED_VIEW AS
+SELECT
+  CALLID,
+  NODE_ID,
+  EVENT_ID,
+  RESULT,
+
+  -- Pre-computed timestamps
+  START_TIME AS CALL_START_TIME,
+  STOP_TIME AS CALL_END_TIME,
+  CALL_DURATION_IN_SECONDS AS CALL_DURATION_SEC,
+  CALL_SETUP_TIME,
+
+  -- Caller number (used as single identity if TO_ID = FROM_ID)
+  REGEXP_SUBSTR(FROM_ID, '\\+?\\d+') AS USER_NUMBER,
+
+  -- Call status (based on RESULT)
+  CASE 
+    WHEN RESULT = '_0' THEN 'Successful'
+    WHEN RESULT IS NULL THEN 'Unknown'
+    ELSE 'Failed'
+  END AS CALL_STATUS,
+
+  -- Time-of-day bucket
+  CASE 
+    WHEN EXTRACT(HOUR FROM START_TIME) BETWEEN 0 AND 5 THEN 'Night'
+    WHEN EXTRACT(HOUR FROM START_TIME) BETWEEN 6 AND 11 THEN 'Morning'
+    WHEN EXTRACT(HOUR FROM START_TIME) BETWEEN 12 AND 17 THEN 'Afternoon'
+    ELSE 'Evening'
+  END AS TIME_OF_DAY,
+
+  -- Hour bucket (numeric)
+  EXTRACT(HOUR FROM START_TIME) AS CALL_HOUR,
+
+  -- Cleaned asserted identity
+  REGEXP_SUBSTR(P_ASSERTED_IDENTITY, '\\+\\d+') AS ASSERTED_NUMBER,
+
+  FROM_ID,
+  P_CHARGING_VECTOR,
+  P_ASSERTED_IDENTITY,
+  USER_AGENT_OF_CALLER
+
+FROM SHARED_CONTENT.SAMPLE_DATA_VW
+WHERE CALLID IS NOT NULL;
+
+
+GRANT SELECT ON VIEW CRM.IMS_ENHANCED_VIEW TO APPLICATION ROLE APP_PUBLIC;
+
+
+CREATE OR REPLACE VIEW CRM.IMS_USER_SUMMARY_VIEW AS
+SELECT
+  REGEXP_SUBSTR(FROM_ID, '\\+?\\d+') AS USER_NUMBER,
+  COUNT(*) AS TOTAL_CALLS,
+  
+  COUNT_IF(RESULT = '_0') AS SUCCESSFUL_CALLS,
+  COUNT_IF(RESULT != '_0') AS FAILED_CALLS,
+  
+  ROUND(AVG(CALL_DURATION_IN_SECONDS), 2) AS AVG_CALL_DURATION_SEC,
+  MAX(CALL_DURATION_IN_SECONDS) AS MAX_CALL_DURATION_SEC,
+  MIN(CALL_DURATION_IN_SECONDS) AS MIN_CALL_DURATION_SEC,
+
+  COUNT(DISTINCT CALLID) AS UNIQUE_CALL_IDS,
+  COUNT(DISTINCT NODE_ID) AS NODES_USED
+
+FROM SHARED_CONTENT.SAMPLE_DATA_VW
+WHERE CALLID IS NOT NULL
+GROUP BY USER_NUMBER;
+
+GRANT SELECT ON VIEW CRM.IMS_USER_SUMMARY_VIEW TO APPLICATION ROLE APP_PUBLIC;
+
+
 
 CREATE OR ALTER VERSIONED SCHEMA CONFIG;
 GRANT USAGE ON SCHEMA CONFIG TO APPLICATION ROLE APP_PUBLIC;
