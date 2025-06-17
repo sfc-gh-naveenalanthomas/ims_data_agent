@@ -68,12 +68,12 @@ grant usage on procedure PYTHON_FUNCTIONS.sp_init(varchar)
 
 
 
-CREATE OR REPLACE STREAMLIT CORE.HOME
+CREATE OR REPLACE STREAMLIT CORE.DATA_AGENT
   FROM '/ims_analytics_dashboard'
   MAIN_FILE = '/Home.py'
 ;
 
-GRANT USAGE ON STREAMLIT CORE.HOME TO APPLICATION ROLE APP_PUBLIC;
+GRANT USAGE ON STREAMLIT CORE.DATA_AGENT TO APPLICATION ROLE APP_PUBLIC;
 
 create or replace stage CRM.data_stg
 	directory = ( enable = true )

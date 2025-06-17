@@ -3,7 +3,7 @@ artifacts:
   setup_script: scripts/setup.sql
   readme: readme.md
   extension_code: true
-  default_streamlit: CORE.HOME
+  default_streamlit: CORE.DATA_AGENT
 references:
   - consumer_table:
       label: "Consumer table"
